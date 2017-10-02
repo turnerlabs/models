@@ -1,0 +1,20 @@
+<annotation verified="yes">
+  <folder>/Users/jkurz/git/models/research/annotations</folder>
+  <filename>Santa_000000934.png</filename>
+  <path>./images/santa/Santa_000000934.png</path>
+  <source><database>Unknown</database></source>
+  <size><width>360</width><height>640</height><depth>3</depth></size>
+  <segmented>0</segmented>
+  <object>
+    <name>santa</name>
+    <pose>Unspecified</pose>
+    <truncated>0</truncated>
+    <difficult>0</difficult>
+      <bndbox>
+        <xmin>315</xmin>
+        <ymin>7</ymin>
+        <xmax>565</xmax>
+        <ymax>193</ymax>
+      </bndbox>
+  </object>
+</annotation>
