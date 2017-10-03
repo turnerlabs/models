@@ -1,7 +1,13 @@
 import os
+import sys
 import glob
 import pandas as pd
 
+import tensorflow as tf
+
+flags = tf.app.flags
+flags.DEFINE_string('csvs', False, 'Path to the CSV inputs')
+FLAGS = flags.FLAGS
 
 def create_xml_item(images, row):
     xml = ['<annotation verified="yes">']
@@ -32,7 +38,7 @@ def csv_to_pascal(path):
         for index, row in csv.iterrows():
             xml = create_xml_item(path, row)
             # If not exists, create the file
-            new_file = path + '/santa/' + os.path.splitext(row['filename'].split('/')[-1])[0] + '.xml'
+            new_file = path + os.path.splitext(row['filename'].split('/')[-1])[0] + '.xml'
             fp = open(new_file, 'w+')
             print(new_file)
             fp.write(xml)
@@ -40,7 +46,11 @@ def csv_to_pascal(path):
 
 
 def main():
-    csv_path = os.path.join(os.getcwd(), 'annotations')
+    csv_path = FLAGS.csvs
+    if csv_path == False:
+        print("must pass in csvs flag")
+        sys.exit(1)
+
     csv_to_pascal(csv_path)
     print('Successfully converted csv to Pascal.')
 
