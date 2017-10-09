@@ -11,6 +11,7 @@ import glob
 from random import shuffle
 import os
 import tensorflow as tf
+import imghdr
 
 flags = tf.app.flags
 flags.DEFINE_string('annotation_file', False, 'Path to Annotation File')
@@ -43,13 +44,23 @@ shuffle(characters)
 for char in characters:
     print('Working on %s' % char.replace('_', ' ').title())
     # all labeled (just name, no bounding box) pictures of the character
-    pics = glob.glob('./%s/%s/*.*' % (FLAGS.images, char))
+    pics = glob.glob('%s/%s/*.*' % (FLAGS.images, char))
     shuffle(pics)
     i = 0
     for p in pics:
-        if p not in already_labeled:
+        try:
+            print p
+            pFormat = p.rsplit(".",1)[0] + "." + imghdr.what(p)
+            os.rename(p,pFormat)
+            print pFormat
+
+        except TypeError:
+            print 'Found incompatible file....Ignoring'
+            continue
+
+        if pFormat not in already_labeled and imghdr.what(pFormat) in ['jpeg','png']:
             try:
-                im = cv2.imread(p)
+                im = cv2.imread(pFormat)
                 height, width, channels = im.shape
                 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
                 ax = plt.gca()
@@ -70,23 +81,31 @@ for char in characters:
                             if position[0] == position[1]:
                                 r = raw_input('Delete this picture[Y/n] ? ')
                                 if r.lower() in ['yes','y']:
-                                    os.remove(p)
+                                    os.remove(pFormat)
                                     plt.close()
                                     return
-                            line = '{0},{1},{2},{3},{4},{5}'.format(p,
-                                height,
-                                width,
-                                char, 
-                                ','.join([str(int(k)) for k in position[0]]), 
-                                ','.join([str(int(k)) for k in position[1]])) 
 
-                            # Open the annotations file to continue to write
-                            target = open(annotations, 'a')
-                            # Write picture and coordinates
-                            target.write(line)
-                            target.write("\n")
-                            plt.close()
-                fig.canvas.set_window_title('%s pictures labeled' % i)   
+                            # pFormat = p.rsplit(".",1)[0] + "." + imghdr.what(p)
+                            if position[0][0]<position[1][0] and position[0][1]<position[1][1]:
+                                line = '{0},{1},{2},{3},{4},{5}'.format(pFormat,
+                                    height,
+                                    width,
+                                    char,
+                                    ','.join([str(int(k)) for k in position[0]]),
+                                    ','.join([str(int(k)) for k in position[1]]))
+
+                                # Open the annotations file to continue to write
+                                target = open(annotations, 'a')
+                                # Write picture and coordinates
+                                target.write(line)
+                                target.write("\n")
+                                plt.close()
+
+                            else:
+                                print "Please make sure first click is top left and second click is bottom right"
+                                plt.close()
+                                return
+                fig.canvas.set_window_title('%s pictures labeled' % i)
                 cid = fig.canvas.mpl_connect('button_press_event', onclick)
                 plt.show()
                 i += 1
@@ -94,20 +113,19 @@ for char in characters:
             except UnicodeDecodeError:
                 plt.close()
                 continue
-            # When process is interrupted, juste print the number of labeled pictures 
+            # When process is interrupted, juste print the number of labeled pictures
             except KeyboardInterrupt:
                 plt.close()
                 print('\nNumber of pictures with bounding box :')
                 with open(annotations) as f:
                     already_labeled = [k.strip().split(',')[5] for k in f.readlines()]
-                nb_pic_tot = {p:len([k for k in glob.glob('./%s/%s/*.*' % (FLAGS.images, p))]) for p in characters} 
+                nb_pic_tot = {p:len([k for k in glob.glob('./%s/%s/*.*' % (FLAGS.images, p))]) for p in characters}
 
-                print('\n'.join(['%s : %d/%d' % (char, nb, nb_pic_tot[char]) for char, nb in sorted(Counter(already_labeled).items(), 
-                                                     key =lambda x:x[1], reverse=True)]))  
+                print('\n'.join(['%s : %d/%d' % (char, nb, nb_pic_tot[char]) for char, nb in sorted(Counter(already_labeled).items(),
+                                                     key =lambda x:x[1], reverse=True)]))
                 t = np.sum(list(nb_pic_tot.values()))
-                sys.exit("Total {}/{} ({}%)" .format(len(already_labeled), 
+                sys.exit("Total {}/{} ({}%)" .format(len(already_labeled),
                                                      t,
-                                                     round(100*len(already_labeled)/t)))      
+                                                     round(100*len(already_labeled)/t)))
 
     plt.close()
-
