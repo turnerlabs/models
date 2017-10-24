@@ -40,15 +40,15 @@ def split(df, group):
 
 
 def create_tf_example(group, path):
-    file_name = os.path.join(path, '{}'.format(group.filename.replace('./images/', '')))
-    with tf.gfile.GFile(file_name, 'rb') as fid:
-        encoded_jpg = fid.read()
-    encoded_jpg_io = io.BytesIO(encoded_jpg)
-    image = Image.open(encoded_jpg_io)
+    file_name = os.path.join(path, '{}'.format(group.filename))
+    image_data = tf.gfile.FastGFile(file_name, 'rb').read()
+    image = Image.open(file_name)
     width, height = image.size
-
-    filename = group.filename.encode('utf8')
-    image_format = b'jpg'
+    filename, file_extension = os.path.splitext(file_name)
+    filename = filename.split('/')[-1] + file_extension
+    print(filename, file_extension.replace('.', ''))
+    filename = filename.encode('utf8')
+    image_format = file_extension.replace('.','').encode('utf8')
     xmins = []
     xmaxs = []
     ymins = []
@@ -69,7 +69,7 @@ def create_tf_example(group, path):
         'image/width': dataset_util.int64_feature(width),
         'image/filename': dataset_util.bytes_feature(filename),
         'image/source_id': dataset_util.bytes_feature(filename),
-        'image/encoded': dataset_util.bytes_feature(encoded_jpg),
+        'image/encoded': dataset_util.bytes_feature(image_data),
         'image/format': dataset_util.bytes_feature(image_format),
         'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
         'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
