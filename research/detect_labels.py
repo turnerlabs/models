@@ -88,8 +88,8 @@ for char in characters:
                             # pFormat = p.rsplit(".",1)[0] + "." + imghdr.what(p)
                             if position[0][0]<position[1][0] and position[0][1]<position[1][1]:
                                 line = '{0},{1},{2},{3},{4},{5}'.format(pFormat,
-                                    height,
                                     width,
+                                    height,
                                     char,
                                     ','.join([str(int(k)) for k in position[0]]),
                                     ','.join([str(int(k)) for k in position[1]]))
